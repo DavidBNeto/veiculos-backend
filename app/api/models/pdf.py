@@ -1,10 +1,16 @@
 from pydantic import BaseModel
+from datetime import date
 from typing import List
 
+from app.api.models.veiculo import Veiculo
 
-# Most fields are optional because there will be times when it will not
-# be possible to get all the information. It will depend on how the pdf
-# extraction is done.
+
+class PDF(BaseModel):
+    nome: str
+    status: str = "PENDENTE"
+    ultimo_visto: date
+    criado: date
+    veiculos: List[Veiculo]
 
 class Copiavel(BaseModel):
     valor: str = ""

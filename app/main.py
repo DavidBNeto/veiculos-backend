@@ -1,8 +1,8 @@
+from app.api.routers.pdf_router import get_pdf_router
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mangum import Mangum
-from app.api.routers.veiculo_router import get_veiculo_router
 from app.config import settings
 
 
@@ -10,7 +10,7 @@ from app.config import settings
 def init_app() -> FastAPI:
     app = FastAPI(title=settings.API_TITLE)
     # Include the car router.
-    app.include_router(get_veiculo_router())
+    app.include_router(get_pdf_router())
     # Include the CORS middleware.
     app.add_middleware(
         CORSMiddleware,
