@@ -1,4 +1,4 @@
-from http.client import HTTPException
+from fastapi import HTTPException
 from typing import List
 from app.api.models.pdf import PDF
 from app.api.repositories.pdf_repository import PDFRepository
