@@ -1,8 +1,13 @@
+from datetime import date
+from io import BytesIO
+from app.api.models.veiculo import Copiavel, Veiculo
+from app.pdf.chevrolet.ChevroletPDFReader import ChevroletPDFReader
 from fastapi import HTTPException
 from typing import List
 from app.api.models.pdf import PDF
 from app.api.repositories.pdf_repository import PDFRepository
 
+CHEVROLET_MONTADORA = "chevrolet"
 
 class PDFService:
     def __init__(self, repository: PDFRepository):
@@ -23,6 +28,9 @@ class PDFService:
         return self._repository.find_by_id(result.inserted_id)
 
     def update(self, nome: str, pdf_data: PDF) -> PDF:
+        today = date.today()
+        date_string = today.strftime("%Y-%m-%d")
+        pdf_data.ultimo_visto = date_string
         result = self._repository.update(nome, pdf_data)
         if result.modified_count == 0:
             raise HTTPException(
@@ -35,3 +43,69 @@ class PDFService:
             raise HTTPException(
                 status_code=400, detail="Dado nao encontrado para deletar.")
         return nome
+    
+    # This function will create a Veiculo object using the data read from a PDF file.
+    # It redirects the call to the correct function based on the 'montadora' parameter.
+    def create_by_pdf(self, file_name: str, pdf_bytes: bytes, montadora: str) -> PDF:
+        if str.lower(montadora) == CHEVROLET_MONTADORA:
+            return self._create_by_pdf_chevrolet(file_name, pdf_bytes)
+        else:
+            raise HTTPException(
+                status_code=400, detail="Montadora inválida.")
+        
+    # This function will create a Veiculo object using the data read from a PDF file.
+    # It is specific for Chevrolet PDFs.
+    def _create_by_pdf_chevrolet(self, file_name: str, pdf_bytes: bytes) -> PDF:
+        bytes_io = BytesIO(pdf_bytes)
+
+        # PDFs from 2023 tend to only work with the lattice mode on,
+        # while PDFs from 2022 tend to only work with the lattice mode off.
+        # This is for sure not a rule, it is what has been observed MOST of the time.
+        # This is also a TERRIBLE way to do this, but there is no good way to do this.
+        # Each PDF has its own way of being read, no patterns, and there is no way to know beforehand.
+        #
+        # From tabula-py documentation:
+        #
+        # "lattice: Force PDF to be extracted using lattice-mode extraction
+        # (if there are ruling lines separating each cell, as in a PDF of an Excel spreadsheet)"
+        lattice = True if '2023' in file_name else False
+        pdf_reader = ChevroletPDFReader(bytes_io, lattice=lattice)
+
+        # DEBUG: Print the PDF tables.
+        # pdf_reader.print_tables()
+        # Here we are reading the data from the first tables in the PDF.
+        vehicles_data = []
+        table_group = ChevroletPDFReader.INTRODUCTION_GROUP
+        for i in range(pdf_reader.get_tables_count(table_group)):
+            for j in range(pdf_reader.get_lines_count(table_group, i)):
+                line_data = pdf_reader.get_line_values(table_group, i, j, {
+                    # Data of the column with name 85% similar to 'CÓDIGO VENDAS' will be stored in the 'codigo_vendas' key.
+                    ("CÓDIGO VENDAS", 85): "sigla",
+                    ("DESCRIÇÃO VENDAS", 85): "desc_vendas",
+                    ("MARCA/MODELO", 50): "num_renavam",
+                    ("DESCRIÇÃO NO CAT", 85): "desc_cat",
+                    ("PRODUÇÃO", 85): "producao",
+                })
+                vehicles_data.append(line_data)
+
+        # List of vehicles to be added in PDF response.
+        vehicles = []
+        for vehicle_dict in vehicles_data:
+            # Setting the data from the PDF to the Veiculo object.
+            sigla = vehicle_dict["sigla"]
+            desc_cat = vehicle_dict["desc_cat"]
+            num_renavam = vehicle_dict["num_renavam"]
+            producao = vehicle_dict["producao"]
+            desc_vendas = vehicle_dict["desc_vendas"]
+            vehicle = Veiculo(sigla=Copiavel(valor=sigla), desc_cat=Copiavel(valor=desc_cat),
+                              num_renavam=Copiavel(valor=num_renavam), producao=Copiavel(valor=producao), desc_vendas=Copiavel(valor=desc_vendas))
+            vehicles.append(vehicle)
+
+        today = date.today()
+        date_string = today.strftime("%Y-%m-%d")
+        pdf = PDF(nome=file_name, ultimo_visto= date_string, criado=date_string, veiculos=vehicles)
+
+        new_pdf = self.create(pdf)
+
+        # Returning the PDF created.
+        return new_pdf

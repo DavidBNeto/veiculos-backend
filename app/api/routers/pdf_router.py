@@ -46,7 +46,7 @@ def delete_pdf(nome: str) -> str:
     return _pdf_service.delete(nome)
 
 @_pdf_router.post("/upload/pdf")
-def create_pdf_by_pdf(file: UploadFile = File(...), montadora: str = Form(...)):
+def create_pdf_by_pdf(file: UploadFile = File(...), montadora: str = Form(...)) -> PDF:
     pdf_bytes = file.file.read()
     file_name = file.filename
     return _pdf_service.create_by_pdf(file_name, pdf_bytes, montadora)
