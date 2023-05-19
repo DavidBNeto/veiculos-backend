@@ -2,6 +2,7 @@ from bson import ObjectId
 from pymongo.database import Database
 from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
 from app.api.models.pdf import PDF
+from app.utils.utils import is_date_after
 
 VEICULO_COLLECTION = "pdfs"
 
@@ -18,8 +19,20 @@ class PDFRepository:
         return pdfs
 
     def get_by_nome(self, nome: str) -> PDF:
-        pdf_dict = self._collection.find_one({"nome": nome})
-        return PDF.parse_obj(pdf_dict)
+        # This method returns the latest pdf with the given nome.
+        # It uses the 'criado' field to determine which pdf is the latest.
+        all_pdfs = self.get_all()
+        latest_pdf = None
+        for pdf in all_pdfs:
+            if pdf.nome == nome:
+                if latest_pdf is None:
+                    latest_pdf = pdf
+                else:
+                    if is_date_after(pdf.criado, latest_pdf.criado):
+                        latest_pdf = pdf
+        if latest_pdf is None:
+            raise Exception(f"PDF com nome {nome} não encontrado.")
+        return latest_pdf
 
     def create(self, pdf_data: PDF) -> InsertOneResult:
         # On create we need to convert car_data to dict and then insert it into the database.

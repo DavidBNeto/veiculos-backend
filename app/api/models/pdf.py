@@ -2,6 +2,7 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import List
 from app.api.models.veiculo import Veiculo
+from app.utils.utils import current_date
 
 
 # Status enum.
@@ -15,6 +16,6 @@ class Status(str, Enum):
 class PDF(BaseModel):
     nome: str
     status: Status = Status.NAO_ABERTO
-    ultimo_visto: str
-    criado: str
-    veiculos: List[Veiculo]
+    ultimo_visto: str = ""
+    criado: str = ""
+    veiculos: List[Veiculo] = []

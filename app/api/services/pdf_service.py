@@ -22,9 +22,9 @@ class PDFService:
     def get_by_nome(self, nome: str) -> PDF:
         try:
             return self._repository.get_by_nome(nome)
-        except Exception:
+        except Exception as error:
             raise HTTPException(
-                status_code=404, detail="PDF não encontrado por nome.")
+                status_code=404, detail=error.args[0])
 
     def create(self, pdf_data: PDF) -> PDF:
         # Set date attributes.
