@@ -8,6 +8,7 @@ from app.api.models.pdf import PDF
 from app.api.repositories.pdf_repository import PDFRepository
 from app.utils.utils import current_date
 
+
 CHEVROLET_MONTADORA = "chevrolet"
 
 
@@ -113,10 +114,10 @@ class PDFService:
             vehicles.append(vehicle)
 
         # Creating the PDF object.
-        # Set date attributes.
-        created_date = current_date()
-        pdf = PDF(nome=file_name, ultimo_visto=created_date,
-                  criado=created_date, veiculos=vehicles)
+        pdf = PDF(
+            nome=file_name,
+            veiculos=vehicles
+        )
         new_pdf = self.create(pdf)
 
         # Returning the PDF created.
