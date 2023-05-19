@@ -1,63 +1,67 @@
+from datetime import date
 from io import BytesIO
-from fastapi import HTTPException
-from app.api.repositories.veiculo_repository import VeiculoRepository
-from app.api.models.veiculo import Veiculo
+from app.api.models.veiculo import Copiavel, Veiculo
 from app.pdf.chevrolet.ChevroletPDFReader import ChevroletPDFReader
+from fastapi import HTTPException
+from typing import List
+from app.api.models.pdf import PDF
+from app.api.repositories.pdf_repository import PDFRepository
+from app.utils.utils import current_date
 
 
 CHEVROLET_MONTADORA = "chevrolet"
 
-# Service class.
-#
-# This class is responsible for handling the business logic.
-# It will call the repository layer to get the data and return the response.
-# It will also handle any exceptions that are raised by the repository layer.
 
-
-class VeiculoService:
-    def __init__(self, repository: VeiculoRepository):
+class PDFService:
+    def __init__(self, repository: PDFRepository):
         self._repository = repository
 
-    def get_all(self) -> list[Veiculo]:
+    def get_all(self) -> List[PDF]:
         return self._repository.get_all()
 
-    def get_by_sigla(self, sigla: str) -> Veiculo:
+    def get_by_nome(self, nome: str) -> PDF:
         try:
-            return self._repository.get_by_sigla(sigla)
-        except Exception:
+            return self._repository.get_by_nome(nome)
+        except Exception as error:
             raise HTTPException(
-                status_code=404, detail="Veiculo nao encontrado.")
+                status_code=404, detail=error.args[0])
 
-    def create(self, veiculo_data: Veiculo) -> Veiculo:
-        result = self._repository.create(veiculo_data)
+    def create(self, pdf_data: PDF) -> PDF:
+        # Set date attributes.
+        created_date = current_date()
+        pdf_data.criado = created_date
+        pdf_data.ultimo_visto = created_date
+        result = self._repository.create(pdf_data)
         return self._repository.find_by_id(result.inserted_id)
 
-    def update(self, sigla: str, veiculo_data: Veiculo) -> Veiculo:
-        result = self._repository.update(sigla, veiculo_data)
+    def update(self, nome: str, pdf_data: PDF) -> PDF:
+        pdf_data.ultimo_visto = current_date()
+        result = self._repository.update(nome, pdf_data)
         if result.modified_count == 0:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
-        return self._repository.get_by_sigla(sigla)
+        return self._repository.get_by_nome(nome)
 
-    def delete(self, sigla: str) -> str:
-        result = self._repository.delete(sigla)
+    def delete(self, nome: str) -> str:
+        result = self._repository.delete(nome)
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=400, detail="Dado nao encontrado para deletar.")
-        return sigla
+                status_code=400, detail="Dado não encontrado para deletar.")
+        return nome
 
     # This function will create a Veiculo object using the data read from a PDF file.
     # It redirects the call to the correct function based on the 'montadora' parameter.
-    def create_by_pdf(self, file_name: str, pdf_bytes: bytes, montadora: str) -> Veiculo:
+    def create_by_pdf(self, file_name: str, pdf_bytes: bytes, montadora: str) -> PDF:
         if str.lower(montadora) == CHEVROLET_MONTADORA:
             return self._create_by_pdf_chevrolet(file_name, pdf_bytes)
+        # Add Jeep later...
         else:
             raise HTTPException(
                 status_code=400, detail="Montadora inválida.")
 
     # This function will create a Veiculo object using the data read from a PDF file.
     # It is specific for Chevrolet PDFs.
-    def _create_by_pdf_chevrolet(self, file_name: str, pdf_bytes: bytes) -> list[Veiculo]:
+    def _create_by_pdf_chevrolet(self, file_name: str, pdf_bytes: bytes) -> PDF:
         bytes_io = BytesIO(pdf_bytes)
 
         # PDFs from 2023 tend to only work with the lattice mode on,
@@ -82,7 +86,7 @@ class VeiculoService:
         for i in range(pdf_reader.get_tables_count(table_group)):
             for j in range(pdf_reader.get_lines_count(table_group, i)):
                 line_data = pdf_reader.get_line_values(table_group, i, j, {
-                    # Data of the column with name 85% similar to 'CÓDIGO VENDAS' will be stored in the 'codigo_vendas' key.
+                    # Data of the column with name 85% similar to 'CÓDIGO VENDAS' will be stored in the 'sigla' key.
                     ("CÓDIGO VENDAS", 85): "sigla",
                     ("DESCRIÇÃO VENDAS", 85): "desc_vendas",
                     ("MARCA/MODELO", 50): "num_renavam",
@@ -91,46 +95,30 @@ class VeiculoService:
                 })
                 vehicles_data.append(line_data)
 
-        # List of vehicles to be returned by the API.
+        # List of vehicles to be added in the PDF response.
         vehicles = []
         for vehicle_dict in vehicles_data:
-            # First we try to find the vehicle in the database using the 'sigla' as the search key.
-            sigla = vehicle_dict["sigla"]
-            vehicle_found = None
-            try:
-                vehicle_found = self.get_by_sigla(sigla)
-                # Ok, found!
-                # We will update the vehicle below.
-            except:
-                # Not found, no problem.
-                # We will create the vehicle below.
-                pass
-
             # Setting the data from the PDF to the Veiculo object.
+            sigla = vehicle_dict["sigla"]
             desc_cat = vehicle_dict["desc_cat"]
             num_renavam = vehicle_dict["num_renavam"]
             producao = vehicle_dict["producao"]
             desc_vendas = vehicle_dict["desc_vendas"]
-            vehicle = Veiculo(sigla=sigla, desc_cat=desc_cat,
-                              num_renavam=num_renavam, producao=producao, desc_vendas=desc_vendas)
-            vehicle.status = "PROCESSADO"
+            vehicle = Veiculo(
+                sigla=Copiavel(valor=sigla),
+                desc_cat=Copiavel(valor=desc_cat),
+                num_renavam=Copiavel(valor=num_renavam),
+                producao=Copiavel(valor=producao),
+                desc_vendas=Copiavel(valor=desc_vendas)
+            )
+            vehicles.append(vehicle)
 
-            # If the vehicle was not found, we create a new one.
-            # If the vehicle was found, we update it.
-            if vehicle_found is None:
-                vehicle.pdf_names = [file_name]
-                new_vehicle = self.create(vehicle)
-                vehicles.append(new_vehicle)
-            else:
-                vehicle.pdf_names = vehicle_found.pdf_names + [file_name]
-                updated_vehicle = self.update(sigla, vehicle)
-                vehicles.append(updated_vehicle)
+        # Creating the PDF object.
+        pdf = PDF(
+            nome=file_name,
+            veiculos=vehicles
+        )
+        new_pdf = self.create(pdf)
 
-        # Returning the list of vehicles.
-        return vehicles
-
-    # This function will create a Veiculo object using the data read from a PDF file.
-    # It is specific for Jeep PDFs.
-    # (NOT IMPLEMENTED YET)
-    def _create_by_pdf_jeep(self, file_name: str, pdf_bytes: bytes) -> Veiculo:
-        pass
+        # Returning the PDF created.
+        return new_pdf

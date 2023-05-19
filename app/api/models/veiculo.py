@@ -7,32 +7,42 @@ from typing import List
 # extraction is done.
 
 
+# Copiavel class is used to store the value of a field and whether it
+# has been copied or not in the frontend.
+class Copiavel(BaseModel):
+    valor: str = ""
+    copiado: bool = False
+
+
+# Combustivel class is used to store the fuel type and power of a
+# vehicle.
 class Combustivel(BaseModel):
-    potencia: str = ""
-    tipo_combustivel: str = ""
+    potencia: Copiavel = Copiavel()
+    tipo_combustivel: Copiavel = Copiavel()
 
 
+# Motor class is used to store the engine information of a vehicle.
 class Motor(BaseModel):
-    cilindradas: str = ""
-    nro_cilindradas: str = ""
+    cilindradas: Copiavel = Copiavel()
+    nro_cilindradas: Copiavel = Copiavel()
     combustiveis: List[Combustivel] = []
 
 
+# Veiculo class is used to store the information of a vehicle.
 class Veiculo(BaseModel):
-    desc_cat: str = ""
-    renavam_desc: str = ""
-    sigla: str  # Required.
-    pacote_def_modelo: str = ""
-    versao: str = ""
-    ano: str = ""
-    marca: str = ""
-    linha: str = ""
+    desc_cat: Copiavel = Copiavel()
+    renavam_desc: Copiavel = Copiavel()
+    sigla: Copiavel = Copiavel()
+    pacote_def_modelo: Copiavel = Copiavel()
+    versao: Copiavel = Copiavel()
+    ano: Copiavel = Copiavel()
+    marca: Copiavel = Copiavel()
+    linha: Copiavel = Copiavel()
     motor: Motor = Motor()
-    carga: str = ""
-    num_passag: str = ""
-    num_portas: str = ""
-    num_renavam: str = ""
+    carga: Copiavel = Copiavel()
+    num_passag: Copiavel = Copiavel()
+    num_portas: Copiavel = Copiavel()
+    num_renavam: Copiavel = Copiavel()
     status: str = "PENDENTE"
-    producao: str = ""
-    desc_vendas: str = ""
-    pdf_names: List[str] = []
+    producao: Copiavel = Copiavel()
+    desc_vendas: Copiavel = Copiavel()
