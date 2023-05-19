@@ -6,21 +6,29 @@ from typing import List
 # be possible to get all the information. It will depend on how the pdf
 # extraction is done.
 
+
+# Copiavel class is used to store the value of a field and whether it
+# has been copied or not in the frontend.
 class Copiavel(BaseModel):
     valor: str = ""
     copiado: bool = False
 
+
+# Combustivel class is used to store the fuel type and power of a
+# vehicle.
 class Combustivel(BaseModel):
     potencia: Copiavel = Copiavel()
     tipo_combustivel: Copiavel = Copiavel()
 
 
+# Motor class is used to store the engine information of a vehicle.
 class Motor(BaseModel):
     cilindradas: Copiavel = Copiavel()
     nro_cilindradas: Copiavel = Copiavel()
     combustiveis: List[Combustivel] = []
 
 
+# Veiculo class is used to store the information of a vehicle.
 class Veiculo(BaseModel):
     desc_cat: Copiavel = Copiavel()
     renavam_desc: Copiavel = Copiavel()

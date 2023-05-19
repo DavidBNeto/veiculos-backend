@@ -1,7 +1,6 @@
 from typing import List
 from app.api.models.pdf import PDF
 from fastapi import APIRouter, File, Form, UploadFile
-
 from app.api.repositories.pdf_repository import PDFRepository
 from app.api.services.pdf_service import PDFService
 from app.database.mongo import get_database
@@ -18,6 +17,7 @@ _database = get_database()
 _pdf_repository = PDFRepository(_database)
 _pdf_service = PDFService(_pdf_repository)
 _pdf_router = APIRouter(prefix="/pdfs")
+
 
 ## Routes - START ##
 
@@ -45,13 +45,15 @@ def update_pdf(nome: str, pdf_data: PDF) -> PDF:
 def delete_pdf(nome: str) -> str:
     return _pdf_service.delete(nome)
 
-@_pdf_router.post("/upload/pdf")
+
+@_pdf_router.post("/upload")
 def create_pdf_by_pdf(file: UploadFile = File(...), montadora: str = Form(...)) -> PDF:
     pdf_bytes = file.file.read()
     file_name = file.filename
     return _pdf_service.create_by_pdf(file_name, pdf_bytes, montadora)
 
 ## Routes - END ##
+
 
 # This function is used to get the car router.
 # It is used in the main.py file to include the router in the FastAPI app.

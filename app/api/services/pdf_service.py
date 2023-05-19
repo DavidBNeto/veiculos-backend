@@ -6,8 +6,10 @@ from fastapi import HTTPException
 from typing import List
 from app.api.models.pdf import PDF
 from app.api.repositories.pdf_repository import PDFRepository
+from app.utils.utils import current_date
 
 CHEVROLET_MONTADORA = "chevrolet"
+
 
 class PDFService:
     def __init__(self, repository: PDFRepository):
@@ -21,16 +23,18 @@ class PDFService:
             return self._repository.get_by_nome(nome)
         except Exception:
             raise HTTPException(
-                status_code=404, detail="PDF nao encontrado por nome.")
-        
+                status_code=404, detail="PDF não encontrado por nome.")
+
     def create(self, pdf_data: PDF) -> PDF:
+        # Set date attributes.
+        created_date = current_date()
+        pdf_data.criado = created_date
+        pdf_data.ultimo_visto = created_date
         result = self._repository.create(pdf_data)
         return self._repository.find_by_id(result.inserted_id)
 
     def update(self, nome: str, pdf_data: PDF) -> PDF:
-        today = date.today()
-        date_string = today.strftime("%Y-%m-%d")
-        pdf_data.ultimo_visto = date_string
+        pdf_data.ultimo_visto = current_date()
         result = self._repository.update(nome, pdf_data)
         if result.modified_count == 0:
             raise HTTPException(
@@ -41,18 +45,19 @@ class PDFService:
         result = self._repository.delete(nome)
         if result.deleted_count == 0:
             raise HTTPException(
-                status_code=400, detail="Dado nao encontrado para deletar.")
+                status_code=400, detail="Dado não encontrado para deletar.")
         return nome
-    
+
     # This function will create a Veiculo object using the data read from a PDF file.
     # It redirects the call to the correct function based on the 'montadora' parameter.
     def create_by_pdf(self, file_name: str, pdf_bytes: bytes, montadora: str) -> PDF:
         if str.lower(montadora) == CHEVROLET_MONTADORA:
             return self._create_by_pdf_chevrolet(file_name, pdf_bytes)
+        # Add Jeep later...
         else:
             raise HTTPException(
                 status_code=400, detail="Montadora inválida.")
-        
+
     # This function will create a Veiculo object using the data read from a PDF file.
     # It is specific for Chevrolet PDFs.
     def _create_by_pdf_chevrolet(self, file_name: str, pdf_bytes: bytes) -> PDF:
@@ -73,13 +78,14 @@ class PDFService:
 
         # DEBUG: Print the PDF tables.
         # pdf_reader.print_tables()
+
         # Here we are reading the data from the first tables in the PDF.
         vehicles_data = []
         table_group = ChevroletPDFReader.INTRODUCTION_GROUP
         for i in range(pdf_reader.get_tables_count(table_group)):
             for j in range(pdf_reader.get_lines_count(table_group, i)):
                 line_data = pdf_reader.get_line_values(table_group, i, j, {
-                    # Data of the column with name 85% similar to 'CÓDIGO VENDAS' will be stored in the 'codigo_vendas' key.
+                    # Data of the column with name 85% similar to 'CÓDIGO VENDAS' will be stored in the 'sigla' key.
                     ("CÓDIGO VENDAS", 85): "sigla",
                     ("DESCRIÇÃO VENDAS", 85): "desc_vendas",
                     ("MARCA/MODELO", 50): "num_renavam",
@@ -88,7 +94,7 @@ class PDFService:
                 })
                 vehicles_data.append(line_data)
 
-        # List of vehicles to be added in PDF response.
+        # List of vehicles to be added in the PDF response.
         vehicles = []
         for vehicle_dict in vehicles_data:
             # Setting the data from the PDF to the Veiculo object.
@@ -97,14 +103,20 @@ class PDFService:
             num_renavam = vehicle_dict["num_renavam"]
             producao = vehicle_dict["producao"]
             desc_vendas = vehicle_dict["desc_vendas"]
-            vehicle = Veiculo(sigla=Copiavel(valor=sigla), desc_cat=Copiavel(valor=desc_cat),
-                              num_renavam=Copiavel(valor=num_renavam), producao=Copiavel(valor=producao), desc_vendas=Copiavel(valor=desc_vendas))
+            vehicle = Veiculo(
+                sigla=Copiavel(valor=sigla),
+                desc_cat=Copiavel(valor=desc_cat),
+                num_renavam=Copiavel(valor=num_renavam),
+                producao=Copiavel(valor=producao),
+                desc_vendas=Copiavel(valor=desc_vendas)
+            )
             vehicles.append(vehicle)
 
-        today = date.today()
-        date_string = today.strftime("%Y-%m-%d")
-        pdf = PDF(nome=file_name, ultimo_visto= date_string, criado=date_string, veiculos=vehicles)
-
+        # Creating the PDF object.
+        # Set date attributes.
+        created_date = current_date()
+        pdf = PDF(nome=file_name, ultimo_visto=created_date,
+                  criado=created_date, veiculos=vehicles)
         new_pdf = self.create(pdf)
 
         # Returning the PDF created.
