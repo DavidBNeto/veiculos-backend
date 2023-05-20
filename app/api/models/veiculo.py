@@ -31,8 +31,8 @@ class Motor(BaseModel):
 # Veiculo class is used to store the information of a vehicle.
 class Veiculo(BaseModel):
     desc_cat: Copiavel = Copiavel()
-    renavam_desc: Copiavel = Copiavel()
-    sigla: Copiavel = Copiavel()
+    desc_renavam: Copiavel = Copiavel()
+    sigla: Copiavel
     pacote_def_modelo: Copiavel = Copiavel()
     versao: Copiavel = Copiavel()
     ano: Copiavel = Copiavel()
