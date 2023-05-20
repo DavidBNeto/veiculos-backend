@@ -141,6 +141,7 @@ class PDFService:
         for key in vehicles_data:
             # Getting the data read from the PDF.
             vehicle_dict = vehicles_data[key]
+            print(vehicle_dict)
             sigla = vehicle_dict["sigla"]
             desc_cat = vehicle_dict["desc_cat"]
             desc_renavam = vehicle_dict["desc_renavam"]
@@ -156,12 +157,12 @@ class PDFService:
                 desc_cat=Copiavel(valor=desc_cat),
                 desc_renavam=Copiavel(valor=desc_renavam),
                 linha=Copiavel(valor=linha),
-                modelo=Copiavel(valor=marca),
+                marca=Copiavel(valor=marca),
                 ano=Copiavel(valor=ano),
                 motor=Motor(
                     combustiveis=[
                         Combustivel(
-                            tipo=Copiavel(valor=combustivel),
+                            tipo_combustivel=Copiavel(valor=combustivel),
                             potencia=Copiavel(valor=potencia)
                         )
                     ],
