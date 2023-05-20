@@ -141,7 +141,6 @@ class PDFService:
         for key in vehicles_data:
             # Getting the data read from the PDF.
             vehicle_dict = vehicles_data[key]
-            print(vehicle_dict)
             sigla = vehicle_dict["sigla"]
             desc_cat = vehicle_dict["desc_cat"]
             desc_renavam = vehicle_dict["desc_renavam"]
