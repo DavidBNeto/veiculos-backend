@@ -41,6 +41,7 @@ POSSIBLE_FUEL_TYPES = ['flex', 'diesel', 'gasolina']
 #
 # Regex to match the 'potência' information.
 POTENCIA_REGEX = r'Potência máxima \(cv\) : ([0-9]+cv)'
+POTENCIA_REGEX2 = r'Potência máxima \(cv\) : ([0-9]*)'
 
 
 # JeepPDFReader class that reads a PDF file and extracts the data from it.
@@ -159,6 +160,8 @@ class JeepPDFReader:
     # It is called by the _build_cars_dict method.
     def _fill_cars_data(self, pages: List[Page]) -> None:
         car_names = list(self._cars.keys())
+        print(self._cars)
+
         current_car_index = 0
         current_car = car_names[current_car_index]
         next_car_index = 1
@@ -200,7 +203,7 @@ class JeepPDFReader:
                     #
                     # Check if it is the line with the 'potência' information.
                     if str.lower(line).startswith('modelo:'):
-                        result = search(POTENCIA_REGEX, line)
+                        result = search(POTENCIA_REGEX2, line)
                         potencia = result.group(1)
                         self._cars[current_car][POTENCIA] = potencia
 
