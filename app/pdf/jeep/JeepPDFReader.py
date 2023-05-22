@@ -95,7 +95,8 @@ class JeepPDFReader:
                         # Because of a bad formatting of the 2023 PDF files, the 'sigla', 'ano' and 'desc_cat' values
                         # come glued together. We have to split them. It is known that the 'sigla' value always has 7
                         # digits, the 'ano' value always has 4 digits and the 'desc_cat' is the rest of the string.
-                        line = line[:7] + ' ' + line[7:11] + ' ' + line[11:]
+                        if ' ' not in line[:11]:
+                            line = line[:7] + ' ' + line[7:11] + ' ' + line[11:]
                         # Creating the car_data_parsed list.
                         # This list will contain the data of the car.
                         # The name of the car might contain spaces, and when split by spaces, it will be split into
