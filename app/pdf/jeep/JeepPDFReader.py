@@ -41,7 +41,7 @@ POSSIBLE_FUEL_TYPES = ['flex', 'diesel', 'gasolina']
 #
 # Regex to match the 'potência' information.
 POTENCIA_REGEX = r'Potência máxima \(cv\) : ([0-9]+cv)'
-POTENCIA_REGEX2 = r'Potência máxima \(cv\) : ([0-9]*)'
+POTENCIA_REGEX_2 = r'Potência máxima \(cv\) : ([0-9]*)'
 
 
 # JeepPDFReader class that reads a PDF file and extracts the data from it.
@@ -92,6 +92,10 @@ class JeepPDFReader:
                 for line in lines:
                     # If in the process of reading the cars (first table)...
                     if reading_cars:
+                        # Because of a bad formatting of the 2023 PDF files, the 'sigla', 'ano' and 'desc_cat' values
+                        # come glued together. We have to split them. It is known that the 'sigla' value always has 7
+                        # digits, the 'ano' value always has 4 digits and the 'desc_cat' is the rest of the string.
+                        line = line[:7] + ' ' + line[7:11] + ' ' + line[11:]
                         # Creating the car_data_parsed list.
                         # This list will contain the data of the car.
                         # The name of the car might contain spaces, and when split by spaces, it will be split into
@@ -160,8 +164,6 @@ class JeepPDFReader:
     # It is called by the _build_cars_dict method.
     def _fill_cars_data(self, pages: List[Page]) -> None:
         car_names = list(self._cars.keys())
-        print(self._cars)
-
         current_car_index = 0
         current_car = car_names[current_car_index]
         next_car_index = 1
@@ -183,7 +185,6 @@ class JeepPDFReader:
                     continue
                 # If reading a car...
                 if reading_car:
-                    print(line)
                     # Check if the line is equal to the pdf footer.
                     # If so, we have finished reading the car.
                     # Move on to the next car.
@@ -203,7 +204,7 @@ class JeepPDFReader:
                     #
                     # Check if it is the line with the 'potência' information.
                     if str.lower(line).startswith('modelo:'):
-                        result = search(POTENCIA_REGEX2, line)
+                        result = search(POTENCIA_REGEX_2, line)
                         potencia = result.group(1)
                         self._cars[current_car][POTENCIA] = potencia
 
