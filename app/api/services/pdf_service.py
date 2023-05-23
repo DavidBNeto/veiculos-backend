@@ -4,7 +4,7 @@ from app.api.models.veiculo import Copiavel, Veiculo
 from app.pdf.chevrolet.ChevroletPDFReader import ChevroletPDFReader
 from fastapi import HTTPException
 from typing import List
-from app.api.models.pdf import PDF
+from app.api.models.pdf import PDF, Status
 from app.api.repositories.pdf_repository import PDFRepository
 from app.utils.utils import current_date
 
@@ -44,6 +44,12 @@ class PDFService:
     
     def update_veiculo(self, nome: str, sigla: str, veiculo_date: Veiculo) -> None:
         result = self._repository.update_veiculo(nome, sigla, veiculo_date)
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=400, detail="Nenhum dado encontrado ou modificado.")
+        
+    def update_pdf_status(self, nome: str, status: Status) -> None:
+        result = self._repository.update_pdf_status(nome, status)
         if result.modified_count == 0:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")

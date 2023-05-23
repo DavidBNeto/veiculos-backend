@@ -1,5 +1,5 @@
 from typing import List
-from app.api.models.pdf import PDF
+from app.api.models.pdf import PDF, Status
 from app.api.models.veiculo import Veiculo
 from fastapi import APIRouter, File, Form, UploadFile
 from app.api.repositories.pdf_repository import PDFRepository
@@ -44,6 +44,10 @@ def update_pdf(nome: str, pdf_data: PDF) -> PDF:
 @_pdf_router.patch("/{nome}/{sigla}")
 def update_pdf_veiculo(nome: str, sigla: str, veiculo_data: Veiculo) -> None:
     return _pdf_service.update_veiculo(nome, sigla, veiculo_data)
+
+@_pdf_router.patch("/{nome}")
+def update_pdf_status(nome: str, status: Status) -> None:
+    return _pdf_service.update_pdf_status(nome, status)
 
 @_pdf_router.delete("/{nome}")
 def delete_pdf(nome: str) -> str:
