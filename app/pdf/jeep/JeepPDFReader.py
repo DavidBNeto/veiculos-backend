@@ -80,7 +80,7 @@ class JeepPDFReader:
     #       'combustivel': '...'
     #       'linha': '...',
     #       'preco': '...',
-    #   },
+    # },
     #   ...
     def _build_cars_dict(self) -> None:
         with pdfplumber.open(self._target) as pdf:
@@ -171,6 +171,12 @@ class JeepPDFReader:
 
     # Method responsible for adding the missing data to the cars.
     # It is called by the _build_cars_dict method.
+    # This method currently adds these fields to the cars:
+    # {
+    #   'nome_carro': {
+    #       'potencia': '...',
+    #       'motor': '...',
+    # },
     def _fill_cars_data(self, pages: List[Page]) -> None:
         car_names = list(self._cars.keys())
         current_car_index = 0

@@ -139,6 +139,8 @@ class PDFService:
         # Returning the PDF created.
         return new_pdf
 
+    # This function will create a Veiculo object using the data read from a PDF file.
+    # It is specific for JEEP PDFs.
     def _create_by_pdf_jeep(self, file_name: str, pdf_bytes: bytes) -> PDF:
         # BytesIO is used to read the PDF bytes.
         bytes_io = BytesIO(pdf_bytes)
@@ -156,7 +158,10 @@ class PDFService:
             sigla = vehicle_dict["sigla"]
             desc_cat = vehicle_dict["desc_cat"]
             desc_renavam = vehicle_dict["desc_renavam"]
-            motor = vehicle_dict["motor"]
+            motor = ""
+            # Just in case the motor could not be read from the PDF.
+            if "motor" in vehicle_dict:
+                motor = vehicle_dict["motor"]
             linha = vehicle_dict["linha"]
             marca = vehicle_dict["marca"]
             ano = vehicle_dict["ano"]

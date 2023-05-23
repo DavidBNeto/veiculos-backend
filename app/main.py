@@ -16,8 +16,6 @@ def init_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=["*"],
         allow_methods=["OPTIONS", "GET", "POST", "PUT", "DELETE"],
-        # Headers should be pdf or json, but more testing is required
-        # "Content-Type", "???", "application/json"
         allow_headers=["*"]
     )
     return app
