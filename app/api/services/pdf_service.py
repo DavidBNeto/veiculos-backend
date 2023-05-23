@@ -156,14 +156,16 @@ class PDFService:
             sigla = vehicle_dict["sigla"]
             desc_cat = vehicle_dict["desc_cat"]
             desc_renavam = vehicle_dict["desc_renavam"]
+            motor = vehicle_dict["motor"]
             linha = vehicle_dict["linha"]
             marca = vehicle_dict["marca"]
             ano = vehicle_dict["ano"]
             potencia = vehicle_dict["potencia"]
-            motor = vehicle_dict["motor"]
             combustivel = vehicle_dict["combustivel"]
 
-            print(vehicle_dict)
+            import json
+            print(json.dumps(vehicle_dict, indent=4))
+            print("motor" in vehicle_dict)
 
             # Creating the Veiculo object.
             vehicle = Veiculo(

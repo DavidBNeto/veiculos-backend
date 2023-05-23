@@ -25,9 +25,9 @@ DESC_RENAVAM = 'desc_renavam'
 MARCA = 'marca'
 COMBUSTIVEL = 'combustivel'
 POTENCIA = 'potencia'
-MOTOR = 'motor'
 PRECO = 'preco'
 PAGINA = 'pagina'
+MOTOR = 'motor'
 # Column names of the first and only table of the PDF file.
 COLUMN_NAMES = [SIGLA, ANO, DESC_CAT, COMBUSTIVEL, PRECO, PAGINA]
 #
@@ -42,7 +42,8 @@ POSSIBLE_FUEL_TYPES = ['flex', 'diesel', 'gasolina']
 #
 # Regex to match the 'potência' information.
 POTENCIA_REGEX = r'Potência máxima \(cv\) : ([0-9]+)'
-MOTOR_REGEX = r'\.Motor (.*)'
+MOTOR_REGEX = r'\.Motor (.* \b(Diesel|Flex|Gasolina)\b)'
+MOTOR_REGEX_2 = r'\*Motor (.* \b(Diesel|Flex|Gasolina)\b)'
 
 
 # JeepPDFReader class that reads a PDF file and extracts the data from it.
@@ -219,6 +220,12 @@ class JeepPDFReader:
                         if result is not None:
                             motor = result.group(1)
                             self._cars[current_car][MOTOR] = motor
+                        else:
+                            # Another possible pattern for the 'motor' information.
+                            result = search(MOTOR_REGEX_2, line)
+                            if result is not None:
+                                motor = result.group(1).strip()
+                                self._cars[current_car][MOTOR] = motor
 
     # Method that returns the cars extracted from the PDF file.
     # It returns a copy of the dictionary, so that the original dictionary is not modified.
