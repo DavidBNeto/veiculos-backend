@@ -2,7 +2,7 @@ from app.api.models.veiculo import Veiculo
 from bson import ObjectId
 from pymongo.database import Database
 from pymongo.results import UpdateResult, DeleteResult, InsertOneResult
-from app.api.models.pdf import PDF
+from app.api.models.pdf import PDF, Status
 from app.utils.utils import is_date_after
 
 PDF_COLLECTION = "pdfs"
@@ -46,6 +46,9 @@ class PDFRepository:
     
     def update_veiculo(self, nome_pdf: str, sigla_veiculo: str, veiculo_data: Veiculo) -> UpdateResult:
         return self._collection.update_one({"nome": nome_pdf, "veiculos": {"$elemMatch":{"sigla.valor": sigla_veiculo}}}, {"$set": {"veiculos.$": veiculo_data.dict()}})
+    
+    def update_pdf_status(self, nome_pdf: str, status: Status) -> UpdateResult:
+        return self._collection.update_one({"nome": nome_pdf}, {"$set": {"status": status}})
 
     def delete(self, nome: str) -> DeleteResult:
         return self._collection.delete_one({"nome": nome})
