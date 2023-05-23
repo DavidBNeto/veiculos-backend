@@ -167,10 +167,7 @@ class PDFService:
             ano = vehicle_dict["ano"]
             potencia = vehicle_dict["potencia"]
             combustivel = vehicle_dict["combustivel"]
-
-            import json
-            print(json.dumps(vehicle_dict, indent=4))
-            print("motor" in vehicle_dict)
+            preco = vehicle_dict["preco"]
 
             # Creating the Veiculo object.
             vehicle = Veiculo(
@@ -180,6 +177,7 @@ class PDFService:
                 linha=Copiavel(valor=linha),
                 marca=Copiavel(valor=marca),
                 ano=Copiavel(valor=ano),
+                preco=Copiavel(valor=f'R${preco}'),
                 motor=Motor(
                     modelo=Copiavel(valor=motor),
                     combustiveis=[

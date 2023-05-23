@@ -36,6 +36,7 @@ class Veiculo(BaseModel):
     sigla: Copiavel
     pacote_def_modelo: Copiavel = Copiavel()
     versao: Copiavel = Copiavel()
+    preco: Copiavel = Copiavel()
     ano: Copiavel = Copiavel()
     marca: Copiavel = Copiavel()
     linha: Copiavel = Copiavel()

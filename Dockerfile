@@ -23,13 +23,13 @@ ENV ENVIRONMENT=${ENVIRONMENT} \
 WORKDIR /app
 
 # Install Java 11 (Needed to use Tabula-Py).
-RUN apt update && apt install -y openjdk-11-jre openjdk-11-jdk
+RUN apt update && apt install -y -f openjdk-11-jre openjdk-11-jdk
 
 # Install Poetry.
 RUN pip install "poetry==$POETRY_VERSION"
 
 # Copy only requirements to cache them in docker layer.
-COPY poetry.lock[t] pyproject.toml /app/
+COPY poetry.lock pyproject.toml /app/
 
 # Project initialization.
 RUN poetry config virtualenvs.create false \
