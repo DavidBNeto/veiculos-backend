@@ -1,4 +1,4 @@
-# Using the official Python 3.10.11 image for Debian Bullseye.
+# Using the official Python 3.10.11 slim.
 FROM python:3.10.11-slim
 
 # Arguments for the build.
