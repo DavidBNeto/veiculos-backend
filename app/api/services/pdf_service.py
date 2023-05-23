@@ -43,6 +43,12 @@ class PDFService:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
         return self._repository.get_by_nome(nome)
+    
+    def update_veiculo(self, nome: str, sigla: str, veiculo_date: Veiculo) -> None:
+        result = self._repository.update_veiculo(nome, sigla, veiculo_date)
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=400, detail="Nenhum dado encontrado ou modificado.")
 
     def delete(self, nome: str) -> str:
         result = self._repository.delete(nome)
