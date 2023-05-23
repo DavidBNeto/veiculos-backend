@@ -1,4 +1,4 @@
-# Using the official Python 3.10.11 slim.
+# Using the official Python 3.10.11 slim image (Debian).
 FROM python:3.10.11-slim
 
 # Arguments for the build.
