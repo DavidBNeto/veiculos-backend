@@ -43,13 +43,13 @@ class PDFService:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
         return self._repository.get_by_nome(nome)
-    
+
     def update_veiculo(self, nome: str, sigla: str, veiculo_date: Veiculo) -> None:
         result = self._repository.update_veiculo(nome, sigla, veiculo_date)
         if result.modified_count == 0:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
-        
+
     def update_pdf_status(self, nome: str, status: Status) -> None:
         result = self._repository.update_pdf_status(nome, status)
         if result.modified_count == 0:
@@ -160,7 +160,10 @@ class PDFService:
             marca = vehicle_dict["marca"]
             ano = vehicle_dict["ano"]
             potencia = vehicle_dict["potencia"]
+            motor = vehicle_dict["motor"]
             combustivel = vehicle_dict["combustivel"]
+
+            print(vehicle_dict)
 
             # Creating the Veiculo object.
             vehicle = Veiculo(
@@ -171,6 +174,7 @@ class PDFService:
                 marca=Copiavel(valor=marca),
                 ano=Copiavel(valor=ano),
                 motor=Motor(
+                    modelo=Copiavel(valor=motor),
                     combustiveis=[
                         Combustivel(
                             tipo_combustivel=Copiavel(valor=combustivel),

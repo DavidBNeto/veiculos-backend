@@ -25,6 +25,7 @@ DESC_RENAVAM = 'desc_renavam'
 MARCA = 'marca'
 COMBUSTIVEL = 'combustivel'
 POTENCIA = 'potencia'
+MOTOR = 'motor'
 PRECO = 'preco'
 PAGINA = 'pagina'
 # Column names of the first and only table of the PDF file.
@@ -40,7 +41,8 @@ POSSIBLE_FUEL_TYPES = ['flex', 'diesel', 'gasolina']
 # Regex constants.
 #
 # Regex to match the 'potência' information.
-POTENCIA_REGEX = r'Potência máxima \(cv\) : ([0-9]+cv)'
+POTENCIA_REGEX = r'Potência máxima \(cv\) : ([0-9]+)'
+MOTOR_REGEX = r'\.Motor (.*)'
 
 
 # JeepPDFReader class that reads a PDF file and extracts the data from it.
@@ -91,10 +93,27 @@ class JeepPDFReader:
                 for line in lines:
                     # If in the process of reading the cars (first table)...
                     if reading_cars:
+                        # If we have reached the end of the table, stop reading the cars.
+                        if is_similar(line, TABLE_FOOTER_STRING_MATCH):
+                            # Add the missing data to the cars.
+                            # Call the _fill_cars_data method.
+                            self._fill_cars_data(pages)
+                            return
+                        # Because of a bad formatting of the 2023 PDF files, the 'sigla', 'ano' and 'desc_cat' values
+                        # come glued together. We have to split them. It is known that the 'sigla' value always has 7
+                        # digits, the 'ano' value always has 4 digits and the 'desc_cat' is the rest of the string.
+                        parts = line.split(' ')
+                        if len(parts[0]) > 7:
+                            line = line[:7] + ' ' + \
+                                line[7:11] + ' ' + line[11:]
+                        elif len(parts[1]) > 4:
+                            line = line[:7] + ' ' + \
+                                line[8:12] + ' ' + line[12:]
                         # Creating the car_data_parsed list.
                         # This list will contain the data of the car.
                         # The name of the car might contain spaces, and when split by spaces, it will be split into
                         # multiple elements. We have to join these elements back together.
+                        #
                         # Car data not parsed yet.
                         car_data = line.split(' ')
                         # Car data from positions 3 to the end (CAR NAME PARTS, FUEL TYPE, PRICE and PAGE)
@@ -125,9 +144,8 @@ class JeepPDFReader:
                         car_data_parsed += card_data_sub[fuel_type_index:]
                         # Get the 'sigla', which is the key of the car in the dictionary.
                         sigla = car_data[0]
-                        # If the 'sigla' is valid and the line is not the table footer...
-                        # It means that we still have cars to process.
-                        if len(sigla) == 7 and not is_similar(line, TABLE_FOOTER_STRING_MATCH):
+                        # If the 'sigla' is valid it means that we still have cars to process.
+                        if len(sigla) == 7:
                             # Get the car name, it will be used as the key of the car in the dictionary.
                             car_name = car_data_parsed[2]
                             self._cars[car_name] = {}
@@ -144,18 +162,13 @@ class JeepPDFReader:
                                 desc_renavam)
                             self._cars[car_name][MARCA] = 'JEEP'
                         else:
-                            # If the 'sigla' is not valid or the line is the table footer...
-                            # It means that we have finished processing the cars.
-                            # Exit the for loop.
+                            # No more cars to process, exit the for loop.
                             break
                     # If not in the process of reading the cars...
                     elif is_similar(line, COLUMN_NAMES_STRING_MATCH):
                         reading_cars = True
-            # Fill the rest of the data of the cars.
-            # Call the _fill_cars_data method.
-            self._fill_cars_data(pages)
 
-    # Method responsible for filling the rest of the data of the cars.
+    # Method responsible for adding the missing data to the cars.
     # It is called by the _build_cars_dict method.
     def _fill_cars_data(self, pages: List[Page]) -> None:
         car_names = list(self._cars.keys())
@@ -175,17 +188,14 @@ class JeepPDFReader:
                 # Check if the line is equal to the next car name.
                 # If so, set the reading_car flag to True.
                 if str.lower(line).strip() == str.lower(current_car).strip():
-                    print(f'[Now Processing {current_car}]')
                     reading_car = True
                     continue
                 # If reading a car...
                 if reading_car:
-                    print(line)
                     # Check if the line is equal to the pdf footer.
                     # If so, we have finished reading the car.
                     # Move on to the next car.
                     if is_similar(line, TABLE_FOOTER_STRING_MATCH):
-                        print(f'[Finished processing {current_car}]')
                         reading_car = False
                         current_car_index = next_car_index
                         current_car = next_car
@@ -203,6 +213,12 @@ class JeepPDFReader:
                         result = search(POTENCIA_REGEX, line)
                         potencia = result.group(1)
                         self._cars[current_car][POTENCIA] = potencia
+                    else:
+                        # Check if it is the line with the 'motor' information.
+                        result = search(MOTOR_REGEX, line)
+                        if result is not None:
+                            motor = result.group(1)
+                            self._cars[current_car][MOTOR] = motor
 
     # Method that returns the cars extracted from the PDF file.
     # It returns a copy of the dictionary, so that the original dictionary is not modified.
