@@ -1,7 +1,8 @@
 from datetime import date
 from io import BytesIO
-from app.api.models.veiculo import Copiavel, Veiculo
+from app.api.models.veiculo import Copiavel, Veiculo, Motor, Combustivel
 from app.pdf.chevrolet.ChevroletPDFReader import ChevroletPDFReader
+from app.pdf.jeep.JeepPDFReader import JeepPDFReader
 from fastapi import HTTPException
 from typing import List
 from app.api.models.pdf import PDF, Status
@@ -10,6 +11,7 @@ from app.utils.utils import current_date
 
 
 CHEVROLET_MONTADORA = "chevrolet"
+JEEP_MONTADORA = "jeep"
 
 
 class PDFService:
@@ -41,13 +43,13 @@ class PDFService:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
         return self._repository.get_by_nome(nome)
-    
+
     def update_veiculo(self, nome: str, sigla: str, veiculo_date: Veiculo) -> None:
         result = self._repository.update_veiculo(nome, sigla, veiculo_date)
         if result.modified_count == 0:
             raise HTTPException(
                 status_code=400, detail="Nenhum dado encontrado ou modificado.")
-        
+
     def update_pdf_status(self, nome: str, status: Status) -> None:
         result = self._repository.update_pdf_status(nome, status)
         if result.modified_count == 0:
@@ -66,7 +68,8 @@ class PDFService:
     def create_by_pdf(self, file_name: str, pdf_bytes: bytes, montadora: str) -> PDF:
         if str.lower(montadora) == CHEVROLET_MONTADORA:
             return self._create_by_pdf_chevrolet(file_name, pdf_bytes)
-        # Add Jeep later...
+        elif str.lower(montadora) == JEEP_MONTADORA:
+            return self._create_by_pdf_jeep(file_name, pdf_bytes)
         else:
             raise HTTPException(
                 status_code=400, detail="Montadora inválida.")
@@ -74,6 +77,7 @@ class PDFService:
     # This function will create a Veiculo object using the data read from a PDF file.
     # It is specific for Chevrolet PDFs.
     def _create_by_pdf_chevrolet(self, file_name: str, pdf_bytes: bytes) -> PDF:
+        # BytesIO is used to read the PDF bytes.
         bytes_io = BytesIO(pdf_bytes)
 
         # PDFs from 2023 tend to only work with the lattice mode on,
@@ -123,6 +127,69 @@ class PDFService:
                 producao=Copiavel(valor=producao),
                 desc_vendas=Copiavel(valor=desc_vendas)
             )
+            vehicles.append(vehicle)
+
+        # Creating the PDF object.
+        pdf = PDF(
+            nome=file_name,
+            veiculos=vehicles
+        )
+        new_pdf = self.create(pdf)
+
+        # Returning the PDF created.
+        return new_pdf
+
+    # This function will create a Veiculo object using the data read from a PDF file.
+    # It is specific for JEEP PDFs.
+    def _create_by_pdf_jeep(self, file_name: str, pdf_bytes: bytes) -> PDF:
+        # BytesIO is used to read the PDF bytes.
+        bytes_io = BytesIO(pdf_bytes)
+
+        # Instantiating the PDF reader.
+        pdf_reader = JeepPDFReader(pdf_bytes=bytes_io)
+
+        # List of vehicles to be added in the PDF response.
+        vehicles = []
+
+        vehicles_data = pdf_reader.get_cars()
+        for key in vehicles_data:
+            # Getting the data read from the PDF.
+            vehicle_dict = vehicles_data[key]
+            sigla = vehicle_dict["sigla"]
+            desc_cat = vehicle_dict["desc_cat"]
+            desc_renavam = vehicle_dict["desc_renavam"]
+            motor = ""
+            # Just in case the motor could not be read from the PDF.
+            if "motor" in vehicle_dict:
+                motor = vehicle_dict["motor"]
+            linha = vehicle_dict["linha"]
+            marca = vehicle_dict["marca"]
+            ano = vehicle_dict["ano"]
+            potencia = vehicle_dict["potencia"]
+            combustivel = vehicle_dict["combustivel"]
+            preco = vehicle_dict["preco"]
+
+            # Creating the Veiculo object.
+            vehicle = Veiculo(
+                sigla=Copiavel(valor=sigla),
+                desc_cat=Copiavel(valor=desc_cat),
+                desc_renavam=Copiavel(valor=desc_renavam),
+                linha=Copiavel(valor=linha),
+                marca=Copiavel(valor=marca),
+                ano=Copiavel(valor=ano),
+                preco=Copiavel(valor=f'R${preco}'),
+                motor=Motor(
+                    modelo=Copiavel(valor=motor),
+                    combustiveis=[
+                        Combustivel(
+                            tipo_combustivel=Copiavel(valor=combustivel),
+                            potencia=Copiavel(valor=potencia)
+                        )
+                    ],
+                )
+            )
+
+            # Appending the Veiculo object to the list.
             vehicles.append(vehicle)
 
         # Creating the PDF object.

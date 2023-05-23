@@ -13,7 +13,7 @@ def test_app():
     yield TestClient(app=app)
 
 
-# Pdf Mock data.
+# PDF Mock data.
 pdf_data = build_pdf_with_default_params()
 
 
@@ -37,7 +37,7 @@ def test_get_pdf_by_nome(test_app: TestClient):
 
 
 def test_update_pdf_by_nome(test_app: TestClient):
-    pdf_data.status = "COMPLETO"
+    pdf_data.status = "concluido"
     nome = pdf_data.nome
     response = test_app.put(f"/pdfs/{nome}", json=pdf_data.dict())
     assert response.status_code == status.HTTP_200_OK

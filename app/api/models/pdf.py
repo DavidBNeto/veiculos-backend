@@ -2,14 +2,13 @@ from enum import Enum
 from pydantic import BaseModel
 from typing import List
 from app.api.models.veiculo import Veiculo
-from app.utils.utils import current_date
 
 
 # Status enum.
 class Status(str, Enum):
-    NAO_ABERTO = "NÃO ABERTO"
-    PENDENTE = "PENDENTE"
-    CONCLUIDO = "CONCLUÍDO"
+    NAO_ABERTO = "nao aberto"
+    PENDENTE = "pendente"
+    CONCLUIDO = "concluido"
 
 
 # PDF class is used to store the information of a pdf.

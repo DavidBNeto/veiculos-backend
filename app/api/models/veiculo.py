@@ -23,6 +23,7 @@ class Combustivel(BaseModel):
 
 # Motor class is used to store the engine information of a vehicle.
 class Motor(BaseModel):
+    modelo: Copiavel = Copiavel()
     cilindradas: Copiavel = Copiavel()
     nro_cilindradas: Copiavel = Copiavel()
     combustiveis: List[Combustivel] = []
@@ -31,10 +32,11 @@ class Motor(BaseModel):
 # Veiculo class is used to store the information of a vehicle.
 class Veiculo(BaseModel):
     desc_cat: Copiavel = Copiavel()
-    renavam_desc: Copiavel = Copiavel()
-    sigla: Copiavel = Copiavel()
+    desc_renavam: Copiavel = Copiavel()
+    sigla: Copiavel
     pacote_def_modelo: Copiavel = Copiavel()
     versao: Copiavel = Copiavel()
+    preco: Copiavel = Copiavel()
     ano: Copiavel = Copiavel()
     marca: Copiavel = Copiavel()
     linha: Copiavel = Copiavel()
@@ -43,6 +45,5 @@ class Veiculo(BaseModel):
     num_passag: Copiavel = Copiavel()
     num_portas: Copiavel = Copiavel()
     num_renavam: Copiavel = Copiavel()
-    status: str = "PENDENTE"
     producao: Copiavel = Copiavel()
     desc_vendas: Copiavel = Copiavel()

@@ -15,6 +15,7 @@ def mock_veiculo_with_default_params() -> Veiculo:
         marca=Copiavel(valor="marca"),
         linha=Copiavel(valor="linha"),
         motor=Motor(
+            modelo=Copiavel(valor="modelo"),
             cilindradas=Copiavel(valor="cilindradas"),
             nro_cilindradas=Copiavel(valor="nro_cilindradas"),
             combustiveis=[Combustivel(
@@ -32,7 +33,6 @@ def mock_veiculo_with_default_params() -> Veiculo:
 # This function returns a PDF instance with mocked data.
 def build_pdf_with_default_params() -> PDF:
     created_date = current_date()
-
     return PDF(
         nome="TEST Example PDF",
         status="PENDENTE",
